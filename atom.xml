@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title><![CDATA[coder42]]></title>
+  
+  <link href="/atom.xml" rel="self"/>
+  <link href="http://yoursite.com/"/>
+  <updated>2014-12-29T06:49:50.110Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name><![CDATA[halfming]]></name>
+    <email><![CDATA[halfming@outlook.com]]></email>
+  </author>
+  
+  <generator uri="http://zespia.tw/hexo/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[hexo]]></title>
+    <link href="http://yoursite.com/2014/12/29/hexo/"/>
+    <id>http://yoursite.com/2014/12/29/hexo/</id>
+    <published>2014-12-29T05:56:15.000Z</published>
+    <updated>2014-12-29T06:48:58.000Z</updated>
+    <content type="html"><![CDATA[<p>随便写下这个站点的建立过程</p>
+<h2 id="hexo">hexo</h2>
+<p><a href="http://hexo.io/" target="_blank" rel="external">Hexo</a> 是node写的静态web生成器，</p>
+<h3 id="安装">安装</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ npm install hexo -g</div><div class="line">$ hexo init blog</div><div class="line">$ <span class="built_in">cd</span> blog</div></pre></td></tr></table></figure>
+
+<h3 id="使用">使用</h3>
+<h4 id="Create_a_new_post">Create a new post</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
+
+<p>More info: <a href="http://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
+<h4 id="Run_server">Run server</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
+
+<p>More info: <a href="http://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
+<h4 id="Generate_static_files">Generate static files</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
+
+<p>More info: <a href="http://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
+<h4 id="Deploy_to_remote_sites">Deploy to remote sites</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
+
+<h2 id="安装theme">安装theme</h2>
+<p>我安装的是<a href="https://github.com/A-limon/pacman" target="_blank" rel="external">Pacman</a><br>cd 到刚才创建的目录下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ git clone https://github.com/A-limon/pacman.git themes/pacman</div></pre></td></tr></table></figure>
+
+<p>然后theme文件夹下会多一个pacman的文件夹，修改_config.yml,<code>theme: pacman</code>。现在就有<br>两个_config.yml文件让我们修改了，一个在主文件下，一个在/themes/pacman/，高兴不。</p>
+<h3 id="安装rss">安装rss</h3>
+<p>这个很简单<br>开启 atom 生成插件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">plugins:</div><div class="line">- hexo-generator-feed</div></pre></td></tr></table></figure>
+
+<p>使用 npm 下载 hexo-generator-feed 插件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">npm install hexo-generator-feed --save</div></pre></td></tr></table></figure>
+
+<p>修改/themes/pacman/下的_config.yml<br>rss: /atom.xml</p>
+<h3 id="安装sitemap">安装sitemap</h3>
+<pre><code>hexo/_config.yml
+plugins:
+-<span class="ruby"> hexo-generator-sitemap
+</span>npm install hexo-generator-sitemap
+</code></pre>]]></content>
+    <summary type="html">
+    <![CDATA[<p>随便写下这个站点的建立过程</p>
+<h2 id="hexo">hexo</h2>
+<p><a href="http://hexo.io/" target="_blank" rel="external">Hexo</a> 是node写的静态web生成器，</p>
+<h3 i]]>
+    </summary>
+    
+      <category term="hexo" scheme="http://yoursite.com/tags/hexo/"/>
+    
+      <category term="web" scheme="http://yoursite.com/categories/web/"/>
+    
+  </entry>
+  
+</feed>
