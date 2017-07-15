@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>coder42</title>
+    <link>http://halfming.github.io/</link>
+    <description>Recent content on coder42</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 14 Jul 2017 12:47:07 +0800</lastBuildDate>
+    
+	<atom:link href="http://halfming.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Markdown</title>
+      <link>http://halfming.github.io/post/markdown/</link>
+      <pubDate>Fri, 14 Jul 2017 12:47:07 +0800</pubDate>
+      
+      <guid>http://halfming.github.io/post/markdown/</guid>
+      <description> markdown基本用法 标题 # 段落 段落的前后要有空行，所谓的空行是指没有文字内容。若想在段内强制换行的方式是使用两个以上空格加上回车（引用中换行省略回车）。 区块引用 &amp;gt; 代码 强调 * * 列表 - 分割线 ***  </description>
+    </item>
+    
+    <item>
+      <title>Elk</title>
+      <link>http://halfming.github.io/post/elk/</link>
+      <pubDate>Thu, 13 Jul 2017 17:12:37 +0800</pubDate>
+      
+      <guid>http://halfming.github.io/post/elk/</guid>
+      <description> 测试 目录  haha eee  #include &amp;lt;stdio.h&amp;gt; { printf(&amp;quot;yyy\n&amp;quot;); } hugo new post/good-to-great.md  </description>
+    </item>
+    
+    <item>
+      <title>哈哈</title>
+      <link>http://halfming.github.io/post/goo-to-great/</link>
+      <pubDate>Thu, 13 Jul 2017 16:44:40 +0800</pubDate>
+      
+      <guid>http://halfming.github.io/post/goo-to-great/</guid>
+      <description> 这个 </description>
+    </item>
+    
+  </channel>
+</rss>
