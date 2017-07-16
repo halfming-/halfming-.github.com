@@ -6,10 +6,55 @@
     <description>Recent content in Posts on coder42</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 14 Jul 2017 12:47:07 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 16 Jul 2017 13:35:29 +0800</lastBuildDate>
     
 	<atom:link href="http://halfming.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Go os/exec不成功解决方法</title>
+      <link>http://halfming.github.io/post/go-exec/</link>
+      <pubDate>Sun, 16 Jul 2017 13:35:29 +0800</pubDate>
+      
+      <guid>http://halfming.github.io/post/go-exec/</guid>
+      <description>go语言有os/exec的命令可以执行系统命令
+cmd := exec.Command(&amp;quot;grep&amp;quot;, &amp;quot;test&amp;quot;, &amp;quot;file&amp;quot;)  不成功
+改成
+command := &amp;quot;grep&amp;quot; + &amp;quot; &amp;quot; + words[1] + &amp;quot; &amp;quot; + dir cmd := exec.Command(&amp;quot;/bin/sh&amp;quot;,&amp;quot;-c&amp;quot;, command )  </description>
+    </item>
+    
+    <item>
+      <title>Hugo常用命令</title>
+      <link>http://halfming.github.io/post/hugo/</link>
+      <pubDate>Sun, 16 Jul 2017 12:52:38 +0800</pubDate>
+      
+      <guid>http://halfming.github.io/post/hugo/</guid>
+      <description> 生成一个网站 hugo new site blog  应用一个theme cd themes git clone https://github.com/spf13/hyde.git  添加post hugo new post/first.md  上传到github hugo --theme=hyde --baseUrl=&amp;quot;http://halfming.github.io/&amp;quot; cd public git init git remote add origin https://github.com/halfming/halfming.github.io.git git add -A git commit -m &amp;quot;first commit&amp;quot; git push -u origin master  </description>
+    </item>
+    
+    <item>
+      <title>Todo</title>
+      <link>http://halfming.github.io/post/todo/</link>
+      <pubDate>Sun, 16 Jul 2017 10:50:07 +0800</pubDate>
+      
+      <guid>http://halfming.github.io/post/todo/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>zabbix</title>
+      <link>http://halfming.github.io/post/zabbix/</link>
+      <pubDate>Sun, 16 Jul 2017 10:50:07 +0800</pubDate>
+      
+      <guid>http://halfming.github.io/post/zabbix/</guid>
+      <description>[TOC]
+安装 说明：系统为centos6.8 安装zabbix3.0LTS版本，数据库使用postgresql，proxy的数据库用sqlite
+架构
+五台机器关系如下
+agent -&amp;gt; proxy -&amp;gt; server -&amp;gt; db &amp;lt;- web  不是很准确，web端也会访问server
+用vagrant建立五台机器
+ config.vm.define &amp;quot;zabbix_server&amp;quot; do |zabbix_server| zabbix_server.vm.box = &amp;quot;centos6&amp;quot; zabbix_server.vm.network &amp;quot;private_network&amp;quot;, ip: &amp;quot;192.168.100.10&amp;quot; zabbix_server.vm.hostname = &amp;quot;server.zabbix&amp;quot; end config.vm.define &amp;quot;zabbix_db&amp;quot; do |zabbix_db| zabbix_db.vm.box = &amp;quot;centos6&amp;quot; zabbix_db.vm.network &amp;quot;private_network&amp;quot;, ip: &amp;quot;192.168.100.11&amp;quot; zabbix_db.vm.hostname = &amp;quot;db.zabbix&amp;quot; end config.vm.define &amp;quot;zabbix_web&amp;quot; do |zabbix_web| zabbix_web.vm.box = &amp;quot;centos6&amp;quot; zabbix_web.vm.network &amp;quot;private_network&amp;quot;, ip: &amp;quot;192.168.100.12&amp;quot; zabbix_web.vm.hostname = &amp;quot;web.zabbix&amp;quot; end config.vm.define &amp;quot;zabbix_proxy&amp;quot; do |zabbix_proxy| zabbix_proxy.vm.box = &amp;quot;centos6&amp;quot; zabbix_proxy.</description>
+    </item>
     
     <item>
       <title>Markdown</title>

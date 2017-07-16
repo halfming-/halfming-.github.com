@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>http://halfming.github.io/post/go-exec/</loc>
+    <lastmod>2017-07-16T13:35:29+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://halfming.github.io/post/hugo/</loc>
+    <lastmod>2017-07-16T12:52:38+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://halfming.github.io/about/</loc>
+    <lastmod>2017-07-16T11:17:33+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://halfming.github.io/todo/</loc>
+    <lastmod>2017-07-16T10:50:23+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://halfming.github.io/post/todo/</loc>
+    <lastmod>2017-07-16T10:50:07+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://halfming.github.io/post/zabbix/</loc>
+    <lastmod>2017-07-16T10:50:07+08:00</lastmod>
+  </url>
   
   <url>
     <loc>http://halfming.github.io/post/markdown/</loc>
@@ -17,24 +48,43 @@
   </url>
   
   <url>
+    <loc>http://halfming.github.io/tags/</loc>
+    <lastmod>2017-07-16T13:35:29+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>http://halfming.github.io/categories/</loc>
     <priority>0</priority>
   </url>
   
   <url>
+    <loc>http://halfming.github.io/categories/jekyll-update/</loc>
+    <lastmod>2017-07-16T10:50:07+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>http://halfming.github.io/post/</loc>
-    <lastmod>2017-07-14T12:47:07+08:00</lastmod>
+    <lastmod>2017-07-16T13:35:29+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://halfming.github.io/tags/</loc>
+    <lastmod>2017-07-16T13:35:29+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://halfming.github.io/tags/zabbix/</loc>
+    <lastmod>2017-07-16T10:50:07+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://halfming.github.io/</loc>
-    <lastmod>2017-07-14T12:47:07+08:00</lastmod>
+    <lastmod>2017-07-16T13:35:29+08:00</lastmod>
     <priority>0</priority>
   </url>
   

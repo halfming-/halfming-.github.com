@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title> zabbix &middot; coder42 </title>
+
+
+<link rel="stylesheet" href="http://halfming.github.io/css/slim.css">
+<link rel="stylesheet" href="http://halfming.github.io/css/highlight.min.css">
+<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Source+Code+Pro' rel='stylesheet' type='text/css'>
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+<link rel="shortcut icon" href="/favicon.ico">
+
+
+<link href="" rel="alternate" type="application/rss+xml" title="coder42" />
+
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+  <h1 class="site-title"><a href="http://halfming.github.io/">coder42</a></h1>
+  <p class="site-tagline"></p>
+  <div class="nav">
+    <a class="nav-btn" href="#">
+      <span class="ci ci-burger"></span>
+    </a>
+    <ul class="nav-list">
+      
+      <li><a href="/about/">about</a></li>
+       
+	  <li class="spacer">&ac;</li>
+  
+    </ul>
+  </div>
+</div>
+    <div class="content">
+      <div class="posts">
+        <div class="post">
+          <h2 class="post-title"><a href="http://halfming.github.io/post/zabbix/">zabbix</a></h2>
+          <span class="post-date">Jul 16, 2017 </span>
+          <div class="post-content">
+            
+
+<p>[TOC]</p>
+
+<h1 id="安装">安装</h1>
+
+<p>说明：系统为centos6.8 安装zabbix3.0LTS版本，数据库使用postgresql，proxy的数据库用sqlite</p>
+
+<p>架构</p>
+
+<p>五台机器关系如下</p>
+
+<pre><code>agent -&gt; proxy -&gt; server -&gt; db  &lt;- web
+</code></pre>
+
+<p>不是很准确，web端也会访问server</p>
+
+<p>用vagrant建立五台机器</p>
+
+<pre><code>  config.vm.define &quot;zabbix_server&quot; do |zabbix_server|
+    zabbix_server.vm.box = &quot;centos6&quot;
+    zabbix_server.vm.network &quot;private_network&quot;, ip: &quot;192.168.100.10&quot;
+    zabbix_server.vm.hostname = &quot;server.zabbix&quot;
+  end
+
+  config.vm.define &quot;zabbix_db&quot; do |zabbix_db|
+    zabbix_db.vm.box = &quot;centos6&quot;
+    zabbix_db.vm.network &quot;private_network&quot;, ip: &quot;192.168.100.11&quot;
+    zabbix_db.vm.hostname = &quot;db.zabbix&quot;
+  end
+
+  config.vm.define &quot;zabbix_web&quot; do |zabbix_web|
+    zabbix_web.vm.box = &quot;centos6&quot;
+    zabbix_web.vm.network &quot;private_network&quot;, ip: &quot;192.168.100.12&quot;
+    zabbix_web.vm.hostname = &quot;web.zabbix&quot;
+  end
+
+  config.vm.define &quot;zabbix_proxy&quot; do |zabbix_proxy|
+    zabbix_proxy.vm.box = &quot;centos6&quot;
+    zabbix_proxy.vm.network &quot;private_network&quot;, ip: &quot;192.168.100.13&quot;
+    zabbix_proxy.vm.hostname = &quot;proxy.zabbix&quot;
+  end
+
+  config.vm.define &quot;zabbix_agent&quot; do |zabbix_agent|
+    zabbix_agent.vm.box = &quot;centos6&quot;
+    zabbix_agent.vm.network &quot;private_network&quot;, ip: &quot;192.168.100.14&quot;
+    zabbix_agent.vm.hostname = &quot;jsp.site.cos&quot;
+  end
+  
+  #box 指定使用的镜像
+  #nework 指定ip
+  #hostname指定hostname
+  #运行 vagrant up zabbix_server zabbix_db zabbix_web zabbix_proxy zabbix_agent
+  #然后就有五台机器了   
+</code></pre>
+
+<h2 id="安装zabbix-db">安装zabbix-db</h2>
+
+<pre><code class="language-bash">yum install postgresql-server
+[root@db ~]# service postgresql start
+
+/var/lib/pgsql/data is missing. Use &quot;service postgresql initdb&quot; to initialize the cluster first.
+                                                           [FAILED]
+#启动就报错 按照提示运行                                                           
+[root@db ~]# service postgresql initdb
+Initializing database:                                     [  OK  ]
+
+默认数据会建立在/var/lib/pgsql/data
+cd /var/lib/pgsql/data
+
+默认监听本地 修改为监听所有地址
+vi postgresql.conf
+#listen_addresses = 'localhost' -&gt; listen_addresses = '*'
+
+修改访问权限的文件 本地无密码访问，192.168.100.0/32段使用密码访问，其他地方无法访问
+vi pg_hba.conf
+# TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
+
+# &quot;local&quot; is for Unix domain socket connections only
+local   all         all                               trust
+# IPv4 local connections:
+host    all         all         192.168.100.0/32          md5
+修改后重启服务器
+service postgresql restart
+创建zabbix的用户和库
+sudo -u postgres createuser zabbix
+sudo -u postgres createdb -O zabbix zabbix
+测试一下
+[root@db data]# psql -U zabbix
+psql (8.4.20)
+Type &quot;help&quot; for help.
+
+zabbix=# \du
+            List of roles
+ Role name | Attributes  | Member of
+-----------+-------------+-----------
+ demo      | Create DB   | {}
+ postgres  | Superuser   | {}
+           : Create role
+           : Create DB
+ zabbix    | Superuser   | {}
+           : Create role
+           : Create DB
+           
+  zabbix-# \q
+ 修改zabbix的密码
+[root@db data]# psql -U postgres
+psql (8.4.20)
+Type &quot;help&quot; for help.
+
+postgres=# alter user zabbix with password 'zabbix';
+ALTER ROLE
+
+以上这个数据库就可以远程访问了
+</code></pre>
+
+<h2 id="安装zabbix-web">安装zabbix-web</h2>
+
+<pre><code class="language-bash">yum install http://repo.zabbix.com/zabbix/3.0/rhel/6/x86_64/zabbix-release-3.0-1.el6.noarch.rpm
+安装zabbix-web-pgsql版
+yum install zabbix-web-pgsql
+安装php
+yum install httpd php php-gd php-bcmath php-pgsql php-xml php-mbstring
+为zabbix-web添加一个虚拟主机
+[root@web ~]# cat /etc/httpd/conf.d/zabbix.conf
+&lt;VirtualHost *:80&gt;
+    DocumentRoot &quot;/usr/share/zabbix&quot;
+    ServerName 192.168.100.12
+    &lt;Directory &quot;/usr/share/zabbix&quot;&gt;
+     Options Indexes FollowSymLinks Includes ExecCGI
+     AllowOverride All
+     Order allow,deny
+     Allow from all
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+重启服务，果然不能访问，报错如下
+
+
+[Sat Jan 07 05:00:39 2017] [error] [client 192.168.100.1] PHP Parse error:  syntax error, unexpected '[' in /usr/share/zabbix/index.php on line 29
+
+官网上zabbix-web3.0要求php5.4以上，centos默认php5.3
+当然不想编译，还是用源来安装
+删除旧的php
+yum remove php*
+安装一个源
+rpm -Uvh https://mirror.webtatic.com/yum/el6/latest.rpm
+安装php
+ 
+yum install php56w php56w-bcmath php56w-xml php56w-mbstring php56w-pgsql php56w-gd
+ 
+修改配置文件 /etc/php.ini
+php_value max_execution_time 300
+php_value memory_limit 128M
+php_value post_max_size 16M
+php_value upload_max_filesize 2M
+php_value max_input_time 300
+php_value always_populate_raw_post_data -1
+# php_value date.timezone Europe/Riga
+
+重启服务后就可以访问了
+</code></pre>
+
+<h2 id="安装zabbix-server">安装zabbix-server</h2>
+
+<pre><code class="language-bash">安装源
+yum install http://repo.zabbix.com/zabbix/3.0/rhel/6/x86_64/zabbix-release-3.0-1.el6.noarch.rpm
+安装zabbix-server-pgsql
+yum install zabbix-server-pgsql
+安装postgresql连接工具
+yum install postgresql
+导入库结构
+zcat /usr/share/doc/zabbix-server-pgsql-3.0.7/create.sql.gz | psql -h 192.168.100.11 -U zabbix zabbix
+修改配置文件 
+vi /etc/zabbix/zabbix_server.conf
+DBHost=zabbix
+DBName=zabbix
+DBUser=zabbix
+DBPassword=zabbix
+重启服务
+service zabbix-server restart
+这时候就可以回到zabbix-web的页面完成配置
+
+</code></pre>
+
+<p>用浏览器访问zabbix-web的地址</p>
+
+<p>最后的配置是这样的，需要注意的是Database schema 的值时public</p>
+
+<p><img src="/Users/half/7AE632AA-4803-45D8-B338-6043BE4275BB.png" alt="7AE632AA-4803-45D8-B338-6043BE4275BB" /></p>
+
+<h2 id="安装zabbix-proxy">安装zabbix-proxy</h2>
+
+<pre><code class="language-bash">同样安装源
+yum install http://repo.zabbix.com/zabbix/3.0/rhel/6/x86_64/zabbix-release-3.0-1.el6.noarch.rpm
+安装proxy
+ yum install zabbix-proxy-sqlite3
+ 修改配置文件
+vi /etc/zabbix/zabbix_proxy.conf
+Server=192.168.100.10  #这里指向 zabbix-server
+Hostname=server.zabbix
+DBName=/var/zabbix/zabbix_proxy
+设置一个目录给sqlite，并设置权限
+[root@proxy ~]# mkdir /var/zabbix
+[root@proxy ~]# chown zabbix.zabbix /var/zabbix
+重启服务
+service zabbix-proxy restart
+查看日志就会发现下面这个问题，因为这个主机没有加到zabbix-server
+tail /var/log/zabbix/zabbix_proxy.log
+3224:20170107:061458.383 cannot send heartbeat message to server at &quot;192.168.100.10&quot;: proxy &quot;server.zabbix&quot; not found
+  3223:20170107:061458.472 cannot obtain configuration data from server at &quot;192.168.100.10&quot;: proxy &quot;server.zabbix&quot; not found
+  
+</code></pre>
+
+<p>在web界面添加proxy</p>
+
+<p><img src="/Users/half/D42DC615-D35E-463C-92B8-78A669AB142B.png" alt="D42DC615-D35E-463C-92B8-78A669AB142B" /></p>
+
+<p><img src="/Users/half/7F71DF0C-7562-4C1D-B81C-DA6972EC6DE3.png" alt="7F71DF0C-7562-4C1D-B81C-DA6972EC6DE3" /></p>
+
+<p>这个写对就可以了，然后就会发现这个数据库已经写入数据了</p>
+
+<pre><code>[root@proxy ~]# ll /var/zabbix/zabbix.db
+-rw-r--r--. 1 root root 544768 Jan  7 08:37 /var/zabbix/zabbix.db
+</code></pre>
+
+<h2 id="安装zabbix-agent">安装zabbix-agent</h2>
+
+<pre><code>yum install http://repo.zabbix.com/zabbix/3.0/rhel/6/x86_64/zabbix-release-3.0-1.el6.noarch.rpm
+yum install zabbix-agent
+vi /etc/zabbix/zabbix_agentd.conf
+Server=192.168.100.13
+
+ServerActive=192.168.100.13
+
+Hostname=jsp.site.cos
+
+这些就不解释了，server指向的是proxy
+</code></pre>
+
+<h1 id="配置">配置</h1>
+
+<h2 id="自动发现">自动发现</h2>
+
+<p><img src="/Users/half/240DF211-AA02-44C6-A6C8-8E34CBB6AD9A.png" alt="240DF211-AA02-44C6-A6C8-8E34CBB6AD9A" /></p>
+
+<p>配置- 动作-自动注册-创建动作</p>
+
+<p>这里创建两条 一条自动加入host 一条根据hostname加入群组并链接模版</p>
+
+<h2 id="监控项和触发器">监控项和触发器</h2>
+
+<p>这个可以在模版和单个主机添加监控项和触发器。</p>
+
+<h2 id="自定义监控项">自定义监控项</h2>
+
+<p>直接写入agent的配置文件</p>
+
+<p>无参数</p>
+
+<p>UserParameter=ping,echo 1</p>
+
+<p>有参数</p>
+
+<p>UserParameter=ping[*],echo $1</p>
+
+<p>调用一个脚本</p>
+
+<p>[root@http zabbix_agentd.d]# cat /etc/zabbix/shell/ping.sh
+echo $1</p>
+
+<p>UserParameter=ping[*],/etc/zabbix/shell/ping.sh $1</p>
+
+<p>自定义监控项后需要重启服务才生效，可以用zabbix-get测试是否成功</p>
+
+<pre><code>zabbix_get -s 192.168.100.15 -p 10050 -k &quot;ping[5]&quot;
+</code></pre>
+
+<p>当然自定义的监控项也是可以添加的 并且可以建立与之对应的触发器</p>
+
+<h2 id="监控项里的发现规则">监控项里的发现规则</h2>
+
+<p>zabbix默认的模版会自动发现磁盘和网卡，当然也可以自己写规则来发现运行的服务和监听的端口</p>
+
+<p>zabbix的模版自带自动发现硬盘的规则，先看看它是怎么工作的</p>
+
+<p>vfs.fs.discovery 是zabbix自带的发现硬盘的key，看看它的内容</p>
+
+<pre><code>[root@web ~]# zabbix_get -s 192.168.100.15 -k vfs.fs.discovery
+zabbix_get [3655]: Check access restrictions in Zabbix agent configuration
+</code></pre>
+
+<p>又是报错，看看日志</p>
+
+<pre><code>[root@http zabbix_agentd.d]# tail /var/log/zabbix/zabbix_agentd.log
+  5829:20170108:022236.084 agent #5 started [active checks #1]
+  5826:20170108:022236.085 agent #2 started [listener #1]
+  5825:20170108:022236.086 agent #1 started [collector]
+  5828:20170108:022406.557 failed to accept an incoming connection: connection from &quot;192.168.100.12&quot; rejected, allowed hosts: &quot;192.168.100.13&quot;
+  5827:20170108:022538.861 failed to accept an incoming connection: connection from &quot;192.168.100.12&quot; rejected, allowed hosts: &quot;192.168.100.13&quot;
+</code></pre>
+
+<p>它这意思是它拒绝了你的请求，并且它只接受192.168.100.13的请求，这个是proxy的地址，上proxy执行同样的命令</p>
+
+<pre><code>[root@proxy ~]# zabbix_get -s 192.168.100.15 -k vfs.fs.discovery
+{&quot;data&quot;:[{&quot;{#FSNAME}&quot;:&quot;/&quot;,&quot;{#FSTYPE}&quot;:&quot;rootfs&quot;},{&quot;{#FSNAME}&quot;:&quot;/proc&quot;,&quot;{#FSTYPE}&quot;:&quot;proc&quot;},{&quot;{#FSNAME}&quot;:&quot;/sys&quot;,&quot;{#FSTYPE}&quot;:&quot;sysfs&quot;},{&quot;{#FSNAME}&quot;:&quot;/dev&quot;,&quot;{#FSTYPE}&quot;:&quot;devtmpfs&quot;},{&quot;{#FSNAME}&quot;:&quot;/dev/pts&quot;,&quot;{#FSTYPE}&quot;:&quot;devpts&quot;},{&quot;{#FSNAME}&quot;:&quot;/dev/shm&quot;,&quot;{#FSTYPE}&quot;:&quot;tmpfs&quot;},{&quot;{#FSNAME}&quot;:&quot;/&quot;,&quot;{#FSTYPE}&quot;:&quot;ext4&quot;},{&quot;{#FSNAME}&quot;:&quot;/selinux&quot;,&quot;{#FSTYPE}&quot;:&quot;selinuxfs&quot;},{&quot;{#FSNAME}&quot;:&quot;/dev&quot;,&quot;{#FSTYPE}&quot;:&quot;devtmpfs&quot;},{&quot;{#FSNAME}&quot;:&quot;/proc/bus/usb&quot;,&quot;{#FSTYPE}&quot;:&quot;usbfs&quot;},{&quot;{#FSNAME}&quot;:&quot;/boot&quot;,&quot;{#FSTYPE}&quot;:&quot;ext4&quot;},{&quot;{#FSNAME}&quot;:&quot;/proc/sys/fs/binfmt_misc&quot;,&quot;{#FSTYPE}&quot;:&quot;binfmt_misc&quot;},{&quot;{#FSNAME}&quot;:&quot;/vagrant&quot;,&quot;{#FSTYPE}&quot;:&quot;vboxsf&quot;}]}
+</code></pre>
+
+<p>有结果了，目测格式是json，{#FSNAME}这东西是zabbix里的宏</p>
+
+<p>于是来写个发现端口的脚本吧,其实是网上抄的</p>
+
+<pre><code>[root@http shell]# cat ports.py
+#!/usr/bin/python
+#coding=utf-8
+import commands
+##########返回命令执行结果
+def getComStr(comand):
+	try:
+		stat, proStr = commands.getstatusoutput(comand)
+	except:
+		print &quot;command %s execute failed, exit&quot; % comand
+	#将字符串转化成列表
+	#proList = proStr.split(&quot;\n&quot;)
+	return proStr
+##########获取系统服务名称和监听端口
+def filterList():
+	tmpStr = getComStr(&quot;netstat -tpln&quot;)
+	tmpList = tmpStr.split(&quot;\n&quot;)
+	del tmpList[0:2]
+	newList = []
+	for i in tmpList:
+		val = i.split()
+		del val[0:3]
+		del val[1:3]
+		#提取端口号
+		valTmp = val[0].split(&quot;:&quot;)
+		val[0] = valTmp[1]
+		#提取服务名称
+		valTmp = val[1].split(&quot;/&quot;)
+		val[1] = valTmp[-1]
+		if val[1] != '-' and val not in newList:
+			newList.append(val)
+	return newList
+def main():
+	netInfo = filterList()
+	#格式化成适合zabbix lld的json数据
+	json_data = &quot;{\n&quot; + &quot;\t&quot; + '&quot;data&quot;:[' + &quot;\n&quot;
+	#print netInfo
+	for net in netInfo:
+		if net != netInfo[-1]:
+			json_data = json_data + &quot;\t\t&quot; + &quot;{&quot; + &quot;\n&quot; + &quot;\t\t\t&quot; + '&quot;{#PPORT}&quot;:&quot;' + str(net[0]) + &quot;\&quot;,\n&quot; + &quot;\t\t\t&quot; + '&quot;{#PNAME}&quot;:&quot;' + str(net[1]) + &quot;\&quot;},\n&quot;
+		else:
+			json_data = json_data + &quot;\t\t&quot; + &quot;{&quot; + &quot;\n&quot; + &quot;\t\t\t&quot; + '&quot;{#PPORT}&quot;:&quot;' + str(net[0]) + &quot;\&quot;,\n&quot; + &quot;\t\t\t&quot; + '&quot;{#PNAME}&quot;:&quot;' + str(net[1]) + &quot;\&quot;}]}&quot;
+	print json_data
+if __name__ == &quot;__main__&quot;:
+	main()
+</code></pre>
+
+<p>运行一下</p>
+
+<pre><code>[root@http zabbix_agentd.d]# python /etc/zabbix/shell/ports.py
+{
+	&quot;data&quot;:[
+		{
+			&quot;{#PPORT}&quot;:&quot;57278&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpc.statd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;10050&quot;,
+			&quot;{#PNAME}&quot;:&quot;zabbix_agentd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;111&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpcbind&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;22&quot;,
+			&quot;{#PNAME}&quot;:&quot;sshd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;25&quot;,
+			&quot;{#PNAME}&quot;:&quot;master&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpc.statd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;zabbix_agentd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpcbind&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;sshd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;master&quot;}]}
+</code></pre>
+
+<p>然后把这个加到agent的配置文件里</p>
+
+<pre><code>UserParameter=ports.discovery,python /etc/zabbix/shell/ports.py
+</code></pre>
+
+<p>测试一下</p>
+
+<pre><code>[root@proxy ~]# zabbix_get -s 192.168.100.15 -k ports.discovery
+Traceback (most recent call last):
+  File &quot;/etc/zabbix/shell/ports.py&quot;, line 44, in &lt;module&gt;
+    main()
+  File &quot;/etc/zabbix/shell/ports.py&quot;, line 33, in main
+    netInfo = filterList()
+  File &quot;/etc/zabbix/shell/ports.py&quot;, line 25, in filterList
+    val[0] = valTmp[1]
+IndexError: list index out of range
+</code></pre>
+
+<p>又是错误，list超出范围，也就list没内容，也就也就是没有权限执行netstat -tpln</p>
+
+<p>然后把agent的配置文件改下sudo执行</p>
+
+<pre><code>UserParameter=ports.discovery,sudo python /etc/zabbix/shell/ports.py
+</code></pre>
+
+<p>并且zabbix配置sudo 无密码</p>
+
+<pre><code>/etc/sudoers 最后加一行
+zabbix	 ALL=(ALL) NOPASSWD: NOPASSWD: /usr/bin/python
+这里指定zabbix执行python的时候可以无密码
+</code></pre>
+
+<p>再试下</p>
+
+<pre><code>[root@proxy ~]# zabbix_get -s 192.168.100.15 -k ports.discovery
+{
+	&quot;data&quot;:[
+		{
+			&quot;{#PPORT}&quot;:&quot;57278&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpc.statd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;10050&quot;,
+			&quot;{#PNAME}&quot;:&quot;zabbix_agentd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;111&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpcbind&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;22&quot;,
+			&quot;{#PNAME}&quot;:&quot;sshd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;25&quot;,
+			&quot;{#PNAME}&quot;:&quot;master&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpc.statd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;zabbix_agentd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;rpcbind&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;sshd&quot;},
+		{
+			&quot;{#PPORT}&quot;:&quot;&quot;,
+			&quot;{#PNAME}&quot;:&quot;master&quot;}]}
+</code></pre>
+
+<p>现在已经成功一半了，后面都是在web里设置了</p>
+
+<p>创建一个模版，添加一个发现规则</p>
+
+<p><img src="/Users/half/9FB0D14B-FB54-4859-9549-BFACCA994640.png" alt="9FB0D14B-FB54-4859-9549-BFACCA994640" /></p>
+
+<p>过滤规则，{#PPORT} 符合后面的正则才会被发现，也就是1到4位的数字</p>
+
+<p>PS：下面的正则写错了 应该是<sup class="footnote-ref" id="fnref:0-9"><a rel="footnote" href="#fn:0-9">1</a></sup>{1,4}$</p>
+
+<h2 id="04803c87-96ff-4e2d-96b3-a05ec99ed878-users-half-04803c87-96ff-4e2d-96b3-a05ec99ed878-png"><img src="/Users/half/04803C87-96FF-4E2D-96B3-A05EC99ED878.png" alt="04803C87-96FF-4E2D-96B3-A05EC99ED878" /></h2>
+
+<p>在发现规则里添加监控项原型</p>
+
+<p><img src="/Users/half/13FC4731-C71A-44DA-BEDA-8BCEEE3837A5.png" alt="13FC4731-C71A-44DA-BEDA-8BCEEE3837A5" /></p>
+
+<p>添加触发器原型</p>
+
+<p><img src="/Users/half/3EE37CE9-1333-4415-B570-1444263743CF.png" alt="3EE37CE9-1333-4415-B570-1444263743CF" /></p>
+
+<p>把模版链接到主机结果大概是这样</p>
+
+<p><img src="/Users/half/55175E7D-D487-4650-B585-2F4C79D62F6D.png" alt="55175E7D-D487-4650-B585-2F4C79D62F6D" /></p>
+
+<p>为什么有10050  正则好像还是不对，不过监控项自动发现基本是成功了。</p>
+
+<h2 id="警报通知">警报通知</h2>
+
+<p>报警通知类似自动发现是在配置-动作-时间源选触发器，创建规则，这里也可以运行自己预先写好的脚本</p>
+
+<h2 id="整个流程">整个流程</h2>
+
+<p>安装以后，建立群组，建立监控模版，写好报警通知和自动发现，安装好agent，注意指向的ip是proxy还是server，hostname符合发现规则，就自动添加了</p>
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:0-9">0-9 <a class="footnote-return" href="#fnref:0-9"><sup>[return]</sup></a></li>
+</ol>
+</div>
+
+          </div>
+        </div>
+        <div class="pagination">
+          <a class="btn previous " href="http://halfming.github.io/post/todo/"> Prev</a>  
+          <a class="btn next " href="http://halfming.github.io/post/markdown/"> Next</a> 
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+  
+  <p>Powered by <a href="http://gohugo.io">Hugo</a>. This theme—Slim—is open sourced on <a href="https://github.com/zhe/hugo-theme-slim">Github</a>.</p>
+  
+</div>
+
+  </div>
+  <script src="http://halfming.github.io/js/slim.js"></script>
+  <script src="http://halfming.github.io/js/highlight.min.js"></script>
+  <script>
+    hljs.initHighlightingOnLoad();
+  </script>
+  
+</body>
+
+</html>
